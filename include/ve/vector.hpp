@@ -2,15 +2,32 @@
 
 #include <cmath>
 #include <cstddef>
+#include <ostream>
 #include <type_traits>
+#include <utility>
 
 namespace ve {
 
 template <template <class> class M, class T, size_t N>
 class Vector : public M<T> {
+    static_assert(std::is_trivial<M<T>>());
+    static_assert(std::is_standard_layout<M<T>>());
     static_assert(sizeof(M<T>) == N * sizeof(T));
 
 public:
+    template <class... Ts>
+    Vector(Ts&&... args)
+        : M<T>(std::forward<Ts>(args)...)
+    { }
+
+    template <class U> requires std::is_convertible_v<U, T>
+    Vector(const Vector<M, U, N>& other)
+    {
+        for (size_t i = 0; i < N; i++) {
+            (*this)[i] = other[i];
+        }
+    }
+
     T& operator[](size_t i)
     {
         return *(reinterpret_cast<T*>(this) + i);
@@ -70,7 +87,8 @@ public:
 template <template <class> class M, class U, class V, size_t N>
 auto operator+(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
-    Vector<M, std::common_type_t<U, V>, N> result = lhs;
+    using R = decltype(std::declval<U>() + std::declval<V>());
+    Vector<M, R, N> result = lhs;
     result += rhs;
     return result;
 }
@@ -78,7 +96,8 @@ auto operator+(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 template <template <class> class M, class U, class V, size_t N>
 auto operator-(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
-    Vector<M, std::common_type_t<U, V>, N> result = lhs;
+    using R = decltype(std::declval<U>() - std::declval<V>());
+    Vector<M, R, N> result = lhs;
     result -= rhs;
     return result;
 }
@@ -86,7 +105,8 @@ auto operator-(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 template <template <class> class M, class T, class S, size_t N>
 auto operator*(const Vector<M, T, N>& vector, const S& scalar)
 {
-    Vector<M, std::common_type_t<T, S>, N> result = vector;
+    using R = decltype(std::declval<T>() * std::declval<S>());
+    Vector<M, R, N> result = vector;
     result *= scalar;
     return result;
 }
@@ -100,7 +120,8 @@ auto operator*(const S& scalar, const Vector<M, T, N>& vector)
 template <template <class> class M, class T, class S, size_t N>
 auto operator/(const Vector<M, T, N>& vector, const S& scalar)
 {
-    Vector<M, std::common_type_t<T, S>, N> result = vector;
+    using R = decltype(std::declval<T>() / std::declval<S>());
+    Vector<M, R, N> result = vector;
     result /= scalar;
     return result;
 }
@@ -125,6 +146,18 @@ Vector<M, T, N> unit(const Vector<M, T, N>& vector)
         copy[i] /= l;
     }
     return copy;
+}
+
+template <template <class> class M, class T, size_t N>
+std::ostream& operator<<(std::ostream& output, const Vector<M, T, N>& vector)
+{
+    static_assert(N > 0);
+    output << "[" << vector[0];
+    for (size_t i = 1; i < N; i++) {
+        output << ", " << vector[i];
+    }
+    output << "]";
+    return output;
 }
 
 } // namespace ve

@@ -3,15 +3,24 @@
 #include "ve/vector.hpp"
 
 #include <cstddef>
+#include <ostream>
 #include <type_traits>
+#include <utility>
 
 namespace ve {
 
 template <template <class> class M, class T, size_t N>
 class Point : public M<T> {
+    static_assert(std::is_trivial<M<T>>());
+    static_assert(std::is_standard_layout<M<T>>());
     static_assert(sizeof(M<T>) == N * sizeof(T));
 
 public:
+    template <class... Ts>
+    Point(Ts&&... args)
+        : M<T>(std::forward<Ts>(args)...)
+    { }
+
     T& operator[](size_t i)
     {
         return *(reinterpret_cast<T*>(this) + i);
@@ -44,23 +53,26 @@ public:
 template <template <class> class M, class U, class V, size_t N>
 auto operator+(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 {
-    Point<M, std::common_type_t<U, V>, N> result = point;
+    using R = decltype(std::declval<U>() + std::declval<V>());
+    Point<M, R, N> result = point;
     result += vector;
-    return point;
+    return result;
 }
 
 template <template <class> class M, class U, class V, size_t N>
 auto operator-(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 {
-    Point<M, std::common_type_t<U, V>, N> result = point;
+    using R = decltype(std::declval<U>() - std::declval<V>());
+    Point<M, R, N> result = point;
     result -= vector;
-    return point;
+    return result;
 }
 
 template <template <class> class M, class U, class V, size_t N>
 auto operator-(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
-    Vector<M, std::common_type_t<U, V>, N> result;
+    using R = decltype(std::declval<U>() - std::declval<V>());
+    Vector<M, R, N> result;
     for (size_t i = 0; i < N; i++) {
         result[i] = lhs[i] - rhs[i];
     }
@@ -71,6 +83,18 @@ template <template <class> class M, class U, class V, size_t N>
 auto distance(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
     return (lhs - rhs).length();
+}
+
+template <template <class> class M, class T, size_t N>
+std::ostream& operator<<(std::ostream& output, const Point<M, T, N>& point)
+{
+    static_assert(N > 0);
+    output << "(" << point[0];
+    for (size_t i = 1; i < N; i++) {
+        output << ", " << point[i];
+    }
+    output << ")";
+    return output;
 }
 
 } // namespace ve
