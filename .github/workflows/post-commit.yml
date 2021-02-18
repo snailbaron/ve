@@ -1,0 +1,53 @@
+name: post-commit
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        config:
+          - name: Ubuntu Latest - GCC
+            os: ubuntu-latest
+            cc: gcc-10
+            cxx: g++-10
+
+          - name: Ubuntu Latest - Clang
+            os: ubuntu-latest
+            cc: clang-10
+            cxx: clang++-10
+
+          - name: Windows Latest - MSVC
+            os: windows-latest
+            cc: cl
+            cxx: cl
+
+          - name: MacOS Latest - Clang
+            os: macos-latest
+            cc: /usr/local/opt/llvm/bin/clang
+            cxx: /usr/local/opt/llvm/bin/clang++
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: cmake -B build -D CMAKE_BUILD_TYPE=Debug -D CMAKE_C_COMPILER=${{ matrix.config.cc }} -D CMAKE_CXX_COMPILER=${{ matrix.config.cxx }}
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        working-directory: build
+        run: ctest --build-config Debug
