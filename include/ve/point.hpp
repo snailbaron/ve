@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ve/internal/pod_wrapper.hpp"
 #include "ve/vector.hpp"
 
 #include <cstddef>
@@ -9,17 +10,14 @@
 
 namespace ve {
 
-template <template <class> class M, class T, size_t N>
-class Point : public M<T> {
+template <template <class> class M, class T, size_t N = sizeof(M<T>) / sizeof(T)>
+class Point : public internal::PodWrapper<M, T, N> {
     static_assert(std::is_trivial<M<T>>());
     static_assert(std::is_standard_layout<M<T>>());
     static_assert(sizeof(M<T>) == N * sizeof(T));
 
 public:
-    template <class... Ts>
-    Point(Ts&&... args)
-        : M<T>(std::forward<Ts>(args)...)
-    { }
+    using internal::PodWrapper<M, T, N>::PodWrapper;
 
     T& operator[](size_t i)
     {

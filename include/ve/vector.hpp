@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ve/internal/pod_wrapper.hpp"
+
 #include <cmath>
 #include <cstddef>
 #include <ostream>
@@ -8,17 +10,14 @@
 
 namespace ve {
 
-template <template <class> class M, class T, size_t N>
-class Vector : public M<T> {
+template <template <class> class M, class T, size_t N = sizeof(M<T>) / sizeof(T)>
+class Vector : public internal::PodWrapper<M, T, N> {
     static_assert(std::is_trivial<M<T>>());
     static_assert(std::is_standard_layout<M<T>>());
     static_assert(sizeof(M<T>) == N * sizeof(T));
 
 public:
-    template <class... Ts>
-    Vector(Ts&&... args)
-        : M<T>(std::forward<Ts>(args)...)
-    { }
+    using internal::PodWrapper<M, T, N>::PodWrapper;
 
     template <class U> requires std::is_convertible_v<U, T>
     Vector(const Vector<M, U, N>& other)
