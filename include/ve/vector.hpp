@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <functional>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -20,24 +21,31 @@ public:
     using internal::PodWrapper<M, T, N>::PodWrapper;
 
     template <class U> requires std::is_convertible_v<U, T>
-    Vector(const Vector<M, U, N>& other)
+    constexpr Vector(const Vector<M, U, N>& other)
+    {
+        *this = other;
+    }
+
+    template <class U> requires std::is_convertible_v<U, T>
+    constexpr Vector& operator=(const Vector<M, U, N>& other)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] = other[i];
         }
+        return *this;
     }
 
-    T& operator[](size_t i)
+    constexpr T& operator[](size_t i)
     {
         return *(reinterpret_cast<T*>(this) + i);
     }
 
-    const T& operator[](size_t i) const
+    constexpr const T& operator[](size_t i) const
     {
         return *(reinterpret_cast<const T*>(this) + i);
     }
 
-    Vector operator-() const
+    constexpr Vector operator-() const
     {
         Vector result = *this;
         for (size_t i = 0; i < N; i++) {
@@ -47,7 +55,7 @@ public:
     }
 
     template <class U> requires std::is_convertible_v<U, T>
-    Vector& operator+=(const Vector<M, U, N>& other)
+    constexpr Vector& operator+=(const Vector<M, U, N>& other)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] += other[i];
@@ -56,7 +64,7 @@ public:
     }
 
     template <class U> requires std::is_convertible_v<U, T>
-    Vector& operator-=(const Vector<M, U, N>& other)
+    constexpr Vector& operator-=(const Vector<M, U, N>& other)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] -= other[i];
@@ -65,7 +73,7 @@ public:
     }
 
     template <class S> requires std::is_convertible_v<S, T>
-    Vector& operator*=(const S& scalar)
+    constexpr Vector& operator*=(const S& scalar)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] *= scalar;
@@ -74,7 +82,7 @@ public:
     }
 
     template <class S> requires std::is_convertible_v<S, T>
-    Vector& operator/=(const S& scalar)
+    constexpr Vector& operator/=(const S& scalar)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] /= scalar;
@@ -84,7 +92,7 @@ public:
 };
 
 template <template <class> class M, class U, class V, size_t N>
-auto operator+(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
+constexpr auto operator+(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     using R = decltype(std::declval<U>() + std::declval<V>());
     Vector<M, R, N> result = lhs;
@@ -93,7 +101,7 @@ auto operator+(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 }
 
 template <template <class> class M, class U, class V, size_t N>
-auto operator-(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
+constexpr auto operator-(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     using R = decltype(std::declval<U>() - std::declval<V>());
     Vector<M, R, N> result = lhs;
@@ -102,7 +110,7 @@ auto operator-(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 }
 
 template <template <class> class M, class T, class S, size_t N>
-auto operator*(const Vector<M, T, N>& vector, const S& scalar)
+constexpr auto operator*(const Vector<M, T, N>& vector, const S& scalar)
 {
     using R = decltype(std::declval<T>() * std::declval<S>());
     Vector<M, R, N> result = vector;
@@ -111,13 +119,13 @@ auto operator*(const Vector<M, T, N>& vector, const S& scalar)
 }
 
 template <template <class> class M, class T, class S, size_t N>
-auto operator*(const S& scalar, const Vector<M, T, N>& vector)
+constexpr auto operator*(const S& scalar, const Vector<M, T, N>& vector)
 {
     return vector * scalar;
 }
 
 template <template <class> class M, class T, class S, size_t N>
-auto operator/(const Vector<M, T, N>& vector, const S& scalar)
+constexpr auto operator/(const Vector<M, T, N>& vector, const S& scalar)
 {
     using R = decltype(std::declval<T>() / std::declval<S>());
     Vector<M, R, N> result = vector;
@@ -126,7 +134,53 @@ auto operator/(const Vector<M, T, N>& vector, const S& scalar)
 }
 
 template <template <class> class M, class T, size_t N>
-T length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<T>
+constexpr bool operator==(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    for (size_t i = 0; i < N; i++) {
+        if (!(lhs[i] == rhs[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator!=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator<=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    for (size_t i = 0; i < N; i++) {
+        if (!(lhs <= rhs)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator>=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    return rhs <= lhs;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator<(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    return lhs <= rhs && lhs != rhs;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator>(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+{
+    return rhs < lhs;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr T length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<T>
 {
     auto sqsum = T{0};
     for (size_t i = 0; i < N; i++) {
@@ -136,7 +190,7 @@ T length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<T>
 }
 
 template <template <class> class M, class T, size_t N>
-Vector<M, T, N> unit(const Vector<M, T, N>& vector)
+constexpr Vector<M, T, N> unit(const Vector<M, T, N>& vector)
     requires std::is_arithmetic_v<T>
 {
     auto copy = vector;
@@ -148,7 +202,7 @@ Vector<M, T, N> unit(const Vector<M, T, N>& vector)
 }
 
 template <template <class> class M, class T, size_t N>
-std::ostream& operator<<(std::ostream& output, const Vector<M, T, N>& vector)
+constexpr std::ostream& operator<<(std::ostream& output, const Vector<M, T, N>& vector)
 {
     static_assert(N > 0);
     output << "[" << vector[0];
@@ -160,3 +214,48 @@ std::ostream& operator<<(std::ostream& output, const Vector<M, T, N>& vector)
 }
 
 } // namespace ve
+
+namespace std {
+
+template <template <class> class M, class T, size_t N>
+struct less<ve::Vector<M, T, N>> {
+    constexpr bool operator()(
+        const ve::Vector<M, T, N>& lhs, const ve::Vector<M, T, N>& rhs) const
+    {
+        size_t i = 0;
+        while (lhs[i] == rhs[i] && i < N) {
+            i++;
+        }
+        return i < N && lhs[i] < rhs[i];
+    }
+};
+
+template <template <class> class M, class T, size_t N>
+struct greater<ve::Vector<M, T, N>> {
+    constexpr bool operator()(
+        const ve::Vector<M, T, N>& lhs, const ve::Vector<M, T, N>& rhs) const
+    {
+        return less<ve::Vector<M, T, N>>{}(rhs, lhs);
+    }
+};
+
+template <template <class> class M, class T, size_t N>
+struct less_equal<ve::Vector<M, T, N>> {
+    constexpr bool operator()(
+        const ve::Vector<M, T, N>& lhs, const ve::Vector<M, T, N>& rhs) const
+    {
+        return less<ve::Vector<M, T, N>>{}(lhs, rhs) || lhs == rhs;
+    }
+};
+
+template <template <class> class M, class T, size_t N>
+struct greater_equal<ve::Vector<M, T, N>> {
+    constexpr bool operator()(
+        const ve::Vector<M, T, N>& lhs, const ve::Vector<M, T, N>& rhs) const
+    {
+        return greater<ve::Vector<M, T, N>>{}(lhs, rhs) || lhs == rhs;
+    }
+};
+
+} // namespace std
+

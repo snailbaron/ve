@@ -19,18 +19,33 @@ class Point : public internal::PodWrapper<M, T, N> {
 public:
     using internal::PodWrapper<M, T, N>::PodWrapper;
 
-    T& operator[](size_t i)
+    template <class U> requires std::is_convertible_v<U, T>
+    constexpr Point(const Point<M, U, N>& other)
+    {
+        *this = other;
+    }
+
+    template <class U> requires std::is_convertible_v<U, T>
+    constexpr Point& operator=(const Point<M, U, N>& other)
+    {
+        for (size_t i = 0; i < N; i++) {
+            (*this)[i] = other[i];
+        }
+        return *this;
+    }
+
+    constexpr T& operator[](size_t i)
     {
         return *(reinterpret_cast<T*>(this) + i);
     }
 
-    const T& operator[](size_t i) const
+    constexpr const T& operator[](size_t i) const
     {
         return *(reinterpret_cast<const T*>(this) + i);
     }
 
     template <class U> requires std::is_convertible_v<U, T>
-    Point& operator+=(const Vector<M, U, N>& vector)
+    constexpr Point& operator+=(const Vector<M, U, N>& vector)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] += vector[i];
@@ -39,7 +54,7 @@ public:
     }
 
     template <class U> requires std::is_convertible_v<U, T>
-    Point& operator-=(const Vector<M, U, N>& vector)
+    constexpr Point& operator-=(const Vector<M, U, N>& vector)
     {
         for (size_t i = 0; i < N; i++) {
             (*this)[i] -= vector[i];
@@ -49,7 +64,7 @@ public:
 };
 
 template <template <class> class M, class U, class V, size_t N>
-auto operator+(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
+constexpr auto operator+(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 {
     using R = decltype(std::declval<U>() + std::declval<V>());
     Point<M, R, N> result = point;
@@ -58,7 +73,7 @@ auto operator+(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 }
 
 template <template <class> class M, class U, class V, size_t N>
-auto operator-(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
+constexpr auto operator-(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 {
     using R = decltype(std::declval<U>() - std::declval<V>());
     Point<M, R, N> result = point;
@@ -67,7 +82,7 @@ auto operator-(const Point<M, U, N>& point, const Vector<M, V, N>& vector)
 }
 
 template <template <class> class M, class U, class V, size_t N>
-auto operator-(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
+constexpr auto operator-(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
     using R = decltype(std::declval<U>() - std::declval<V>());
     Vector<M, R, N> result;
@@ -77,14 +92,31 @@ auto operator-(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
     return result;
 }
 
+template <template <class> class M, class T, size_t N>
+constexpr bool operator==(const Point<M, T, N>& lhs, const Point<M, T, N>& rhs)
+{
+    for (size_t i = 0; i < N; i++) {
+        if (!(lhs[i] == rhs[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <template <class> class M, class T, size_t N>
+constexpr bool operator!=(const Point<M, T, N>& lhs, const Point<M, T, N>& rhs)
+{
+    return !(lhs == rhs);
+}
+
 template <template <class> class M, class U, class V, size_t N>
-auto distance(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
+constexpr auto distance(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
     return (lhs - rhs).length();
 }
 
 template <template <class> class M, class T, size_t N>
-std::ostream& operator<<(std::ostream& output, const Point<M, T, N>& point)
+constexpr std::ostream& operator<<(std::ostream& output, const Point<M, T, N>& point)
 {
     static_assert(N > 0);
     output << "(" << point[0];
