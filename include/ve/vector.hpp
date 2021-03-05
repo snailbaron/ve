@@ -133,8 +133,8 @@ constexpr auto operator/(const Vector<M, T, N>& vector, const S& scalar)
     return result;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator==(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator==(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     for (size_t i = 0; i < N; i++) {
         if (!(lhs[i] == rhs[i])) {
@@ -144,43 +144,43 @@ constexpr bool operator==(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs
     return true;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator!=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator!=(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     return !(lhs == rhs);
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator<=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator<=(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     for (size_t i = 0; i < N; i++) {
-        if (!(lhs <= rhs)) {
+        if (!(lhs[i] <= rhs[i])) {
             return false;
         }
     }
     return true;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator>=(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator>=(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     return rhs <= lhs;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator<(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator<(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     return lhs <= rhs && lhs != rhs;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator>(const Vector<M, T, N>& lhs, const Vector<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator>(const Vector<M, U, N>& lhs, const Vector<M, V, N>& rhs)
 {
     return rhs < lhs;
 }
 
 template <template <class> class M, class T, size_t N>
-constexpr T length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<T>
+constexpr auto length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<T>
 {
     auto sqsum = T{0};
     for (size_t i = 0; i < N; i++) {
@@ -190,15 +190,10 @@ constexpr T length(const Vector<M, T, N>& vector) requires std::is_arithmetic_v<
 }
 
 template <template <class> class M, class T, size_t N>
-constexpr Vector<M, T, N> unit(const Vector<M, T, N>& vector)
+constexpr auto unit(const Vector<M, T, N>& vector)
     requires std::is_arithmetic_v<T>
 {
-    auto copy = vector;
-    auto l = length(copy);
-    for (size_t i = 0; i < N; i++) {
-        copy[i] /= l;
-    }
-    return copy;
+    return vector / length(vector);
 }
 
 template <template <class> class M, class T, size_t N>

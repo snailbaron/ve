@@ -2,22 +2,14 @@
 
 #include <catch2/catch.hpp>
 
+#include <cmath>
+#include <set>
+#include <sstream>
 #include <type_traits>
+#include <utility>
 
 #define HAS_TYPE(EXPRESSION, TYPE) \
     static_assert(std::is_same<decltype(EXPRESSION), TYPE>());
-
-#define CHECK_TYPE_VALUE(EXPRESSION, VALUE)                     \
-    do {                                                        \
-        static_assert(                                          \
-            std::is_same<                                       \
-                std::remove_reference_t<decltype(EXPRESSION)>,  \
-                decltype(VALUE)                                 \
-            >()                                                 \
-        );                                                      \
-        auto calculatedExpression = EXPRESSION;                 \
-        CHECK(calculatedExpression == VALUE);                   \
-    } while (false)
 
 #define CHECK_OP_EQ(OP, L, R, VALUE)                            \
     do {                                                        \
@@ -50,21 +42,6 @@ template <class T> struct XYModel {
 };
 template <class T> using XYVector = ve::Vector<XYModel, T, 2>;
 template <class T> using XYPoint = ve::Point<XYModel, T, 2>;
-
-template <class T> struct RGBModel {
-    T r;
-    T g;
-    T b;
-};
-template <class T> using RGBVector = ve::Vector<RGBModel, T, 3>;
-template <class T> using RGBPoint = ve::Point<RGBModel, T, 3>;
-
-template <class T> struct UVModel {
-    T u;
-    T v;
-};
-template <class T> using UVVector = ve::Vector<UVModel, T, 2>;
-template <class T> using UVPoint = ve::Point<UVModel, T, 2>;
 
 TEST_CASE("Initialization, explicit arguments")
 {
@@ -167,6 +144,9 @@ TEST_CASE("Vector and Point arithmetics")
     auto lv = XYVector<long long>{3, 4};
     auto sp = XYPoint<short>{5, 6};
     auto lp = XYPoint<long long>{7, 8};
+    long long l = 10;
+    short s = 20;
+    float f = 0.5f;
 
     CHECK_OP_EQ(+=, sv, lv, XYVector<short>(4, 6));
     CHECK_OP_EQ(+=, lv, sv, XYVector<long long>(4, 6));
@@ -185,12 +165,108 @@ TEST_CASE("Vector and Point arithmetics")
     CHECK_OP_EQ(-=, lp, sv, XYPoint<long long>(6, 6));
     CHECK_OP(-, sp, lv, XYPoint<long long>(2, 2));
     CHECK_OP(-, lp, sv, XYPoint<long long>(6, 6));
+
+    CHECK_OP_EQ(*=, sv, l, XYVector<short>(10, 20));
+    CHECK_OP(*, sv, l, XYVector<long long>(10, 20));
+    CHECK_OP(*, l, sv, XYVector<long long>(10, 20));
+    CHECK_OP_EQ(*=, lv, s, XYVector<long long>(60, 80));
+    CHECK_OP(*, lv, s, XYVector<long long>(60, 80));
+    CHECK_OP(*, s, lv, XYVector<long long>(60, 80));
+
+    CHECK_OP_EQ(/=, sv, f, XYVector<short>(2, 4));
+    CHECK_OP(/, sv, f, XYVector<float>(2, 4));
 }
 
-TEST_CASE("Vector conversions")
+TEST_CASE("Handy conversions")
 {
     XYVector<short> v;
 
     HAS_TYPE(v, XYVector<short>);
     HAS_TYPE(1.f * v, XYVector<float>);
+}
+
+TEST_CASE("Vector Comparison")
+{
+    XYVector<short> s12 {1, 2};
+    XYVector<long long> ll12 {1, 2};
+    XYVector<int> i12 {1, 2};
+    XYVector<int> i21 {2, 1};
+    XYVector<int> i11 {1, 1};
+    XYVector<int> i02 {0, 2};
+
+    CHECK(s12 == ll12);
+
+    CHECK(i12 != i21);
+    CHECK_FALSE(i12 == i21);
+    CHECK_FALSE(i12 < i21);
+    CHECK_FALSE(i12 > i21);
+    CHECK_FALSE(i12 <= i21);
+    CHECK_FALSE(i12 >= i21);
+
+    CHECK_FALSE(i12 == i11);
+    CHECK(i12 != i11);
+    CHECK(i12 > i11);
+    CHECK(i12 >= i11);
+    CHECK(i11 < i12);
+    CHECK(i11 <= i12);
+
+    CHECK_FALSE(i12 == i02);
+    CHECK(i12 != i02);
+    CHECK(i12 > i02);
+    CHECK(i02 >= i02);
+    CHECK(i02 < i12);
+    CHECK(i02 <= i12);
+}
+
+TEST_CASE("Point Comparison")
+{
+    XYPoint<short> s12 {1, 2};
+    XYPoint<long long> ll12 {1, 2};
+    XYPoint<short> s11 {1, 1};
+    XYPoint<short> s02 {0, 2};
+
+    CHECK(s12 == ll12);
+
+    CHECK_FALSE(s12 == s11);
+    CHECK(s12 != s11);
+    CHECK_FALSE(s12 == s02);
+    CHECK(s12 != s02);
+}
+
+TEST_CASE("Can put into set")
+{
+    std::set<XYVector<int>> vs;
+    std::set<XYPoint<int>> ps;
+}
+
+TEST_CASE("Vector Utility Functions")
+{
+    SECTION("length") {
+        auto v = XYVector<int>{1, 1};
+        CHECK(length(v) == std::sqrt(2));
+    }
+
+    SECTION("unit") {
+        auto v = XYVector<int>{1, 1};
+        auto r = XYVector<decltype(std::sqrt(std::declval<int>()))>{
+            1 / std::sqrt(2), 1 / std::sqrt(2)};
+        CHECK(unit(v) == r);
+    }
+}
+
+TEST_CASE("Stream Output")
+{
+    SECTION("Vector") {
+        auto v = XYVector<int>{1, 2};
+        std::ostringstream stream;
+        stream << v;
+        CHECK(stream.str() == "[1, 2]");
+    }
+
+    SECTION("Point") {
+        auto p = XYPoint<int>{1, 2};
+        std::ostringstream stream;
+        stream << p;
+        CHECK(stream.str() == "(1, 2)");
+    }
 }

@@ -1,5 +1,5 @@
 set(tests
-    01-xy-and-rgb
+    01-xy
 )
 
 foreach(test ${tests})

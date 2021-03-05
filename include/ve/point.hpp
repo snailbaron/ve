@@ -92,8 +92,8 @@ constexpr auto operator-(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
     return result;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator==(const Point<M, T, N>& lhs, const Point<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator==(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
     for (size_t i = 0; i < N; i++) {
         if (!(lhs[i] == rhs[i])) {
@@ -103,8 +103,8 @@ constexpr bool operator==(const Point<M, T, N>& lhs, const Point<M, T, N>& rhs)
     return true;
 }
 
-template <template <class> class M, class T, size_t N>
-constexpr bool operator!=(const Point<M, T, N>& lhs, const Point<M, T, N>& rhs)
+template <template <class> class M, class U, class V, size_t N>
+constexpr bool operator!=(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
     return !(lhs == rhs);
 }
