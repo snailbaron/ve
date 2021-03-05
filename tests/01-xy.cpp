@@ -175,6 +175,9 @@ TEST_CASE("Vector and Point arithmetics")
 
     CHECK_OP_EQ(/=, sv, f, XYVector<short>(2, 4));
     CHECK_OP(/, sv, f, XYVector<float>(2, 4));
+
+    CHECK_OP(-, sp, lp, XYVector<long long>(-2, -2));
+    CHECK_OP(-, lp, sp, XYVector<long long>(2, 2));
 }
 
 TEST_CASE("Handy conversions")
@@ -239,7 +242,7 @@ TEST_CASE("Can put into set")
     std::set<XYPoint<int>> ps;
 }
 
-TEST_CASE("Vector Utility Functions")
+TEST_CASE("Utility Functions")
 {
     SECTION("length") {
         auto v = XYVector<int>{1, 1};
@@ -251,6 +254,12 @@ TEST_CASE("Vector Utility Functions")
         auto r = XYVector<decltype(std::sqrt(std::declval<int>()))>{
             1 / std::sqrt(2), 1 / std::sqrt(2)};
         CHECK(unit(v) == r);
+    }
+
+    SECTION("distance") {
+        auto p1 = XYPoint<short>{1, 2};
+        auto p2 = XYPoint<long long>{3, 5};
+        CHECK(p1 - p2 == XYVector<long long>(-2, -3));
     }
 }
 
