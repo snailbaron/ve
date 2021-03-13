@@ -17,7 +17,7 @@ public:
     template <class... Ts>
     constexpr PodWrapper(Ts&&... args)
     requires std::conjunction_v<std::is_convertible<Ts, T>...>
-        : Pod<T>{std::forward<T>(args)...}
+        : Pod<T>{static_cast<T&&>(args)...}
     { }
 
 private:

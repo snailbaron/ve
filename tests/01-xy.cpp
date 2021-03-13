@@ -18,7 +18,8 @@
             auto& ref = (L OP R);                               \
             auto sameType = std::is_same<                       \
                 std::remove_reference_t<decltype(ref)>,         \
-                decltype(VALUE)>();                             \
+                decltype(VALUE)                                 \
+            >();                                                \
             CHECK(sameType);                                    \
             CHECK(L == VALUE);                                  \
             CHECK(ref == VALUE);                                \
@@ -144,36 +145,32 @@ TEST_CASE("Vector and Point arithmetics")
     auto lv = XYVector<long long>{3, 4};
     auto sp = XYPoint<short>{5, 6};
     auto lp = XYPoint<long long>{7, 8};
+    auto fv = XYVector<float>{9.f, 10.f};
     long long l = 10;
     short s = 20;
     float f = 0.5f;
 
-    CHECK_OP_EQ(+=, sv, lv, XYVector<short>(4, 6));
     CHECK_OP_EQ(+=, lv, sv, XYVector<long long>(4, 6));
     CHECK_OP(+, sv, lv, XYVector<long long>(4, 6));
     CHECK_OP(+, lv, sv, XYVector<long long>(4, 6));
-    CHECK_OP_EQ(+=, sp, lv, XYPoint<short>(8, 10));
     CHECK_OP_EQ(+=, lp, sv, XYPoint<long long>(8, 10));
     CHECK_OP(+, sp, lv, XYPoint<long long>(8, 10));
     CHECK_OP(+, lp, sv, XYPoint<long long>(8, 10));
 
-    CHECK_OP_EQ(-=, sv, lv, XYVector<short>(-2, -2));
     CHECK_OP_EQ(-=, lv, sv, XYVector<long long>(2, 2));
     CHECK_OP(-, sv, lv, XYVector<long long>(-2, -2));
     CHECK_OP(-, lv, sv, XYVector<long long>(2, 2));
-    CHECK_OP_EQ(-=, sp, lv, XYPoint<short>(2, 2));
     CHECK_OP_EQ(-=, lp, sv, XYPoint<long long>(6, 6));
     CHECK_OP(-, sp, lv, XYPoint<long long>(2, 2));
     CHECK_OP(-, lp, sv, XYPoint<long long>(6, 6));
 
-    CHECK_OP_EQ(*=, sv, l, XYVector<short>(10, 20));
+    CHECK_OP_EQ(*=, lv, s, XYVector<long long>(60, 80));
     CHECK_OP(*, sv, l, XYVector<long long>(10, 20));
     CHECK_OP(*, l, sv, XYVector<long long>(10, 20));
-    CHECK_OP_EQ(*=, lv, s, XYVector<long long>(60, 80));
     CHECK_OP(*, lv, s, XYVector<long long>(60, 80));
     CHECK_OP(*, s, lv, XYVector<long long>(60, 80));
 
-    CHECK_OP_EQ(/=, sv, f, XYVector<short>(2, 4));
+    CHECK_OP_EQ(/=, fv, f, XYVector<float>(18, 20));
     CHECK_OP(/, sv, f, XYVector<float>(2, 4));
 
     CHECK_OP(-, sp, lp, XYVector<long long>(-2, -2));
