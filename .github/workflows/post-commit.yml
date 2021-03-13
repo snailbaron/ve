@@ -59,7 +59,7 @@ jobs:
 
       - name: Test
         working-directory: build
-        run: ctest --build-config ${{ matrix.build-type }}
+        run: ctest --build-config ${{ matrix.build-type }} --output-on-failure
 
   test-coverage:
     name: 'Test Coverage: Ubuntu - GCC'
@@ -92,7 +92,7 @@ jobs:
 
       - name: Test
         working-directory: build
-        run: ctest --build-config Debug
+        run: ctest --build-config Debug --output-on-failure
 
       - name: Generate Coverage Info
         run: |
