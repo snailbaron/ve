@@ -13,7 +13,7 @@ target_include_directories(ve INTERFACE include)
 if(VE_BUILD_TESTS_AND_EXAMPLES)
     add_subdirectory(examples)
 
-    if(NOT TARGET Catch2::Catch2)
+    if(NOT TARGET Catch2::Catch2WithMain)
         add_subdirectory(deps/Catch2)
     endif()
     enable_testing()
