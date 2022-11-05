@@ -190,10 +190,14 @@ constexpr auto length(const Vector<M, T, N>& vector) requires std::is_arithmetic
 }
 
 template <template <class> class M, class T, size_t N>
-constexpr auto unit(const Vector<M, T, N>& vector)
+constexpr Vector<M, T, N> unit(const Vector<M, T, N>& vector)
     requires std::is_arithmetic_v<T>
 {
-    return vector / length(vector);
+    if (length(vector) > 0) {
+        return vector / length(vector);
+    } else {
+        return vector;
+    }
 }
 
 template <template <class> class M, class T, size_t N>
