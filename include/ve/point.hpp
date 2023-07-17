@@ -112,7 +112,7 @@ constexpr bool operator!=(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 template <template <class> class M, class U, class V, size_t N>
 constexpr auto distance(const Point<M, U, N>& lhs, const Point<M, V, N>& rhs)
 {
-    return (lhs - rhs).length();
+    return length(lhs - rhs);
 }
 
 template <template <class> class M, class T, size_t N>
